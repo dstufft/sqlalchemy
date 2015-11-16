@@ -632,14 +632,14 @@ class PGDialect_psycopg2(PGDialect):
         extensions = self._psycopg2_extensions()
 
         fns = []
-        if self.client_encoding is not None:
-            def on_connect(conn):
-                conn.set_client_encoding(self.client_encoding)
-            fns.append(on_connect)
-
         if self.isolation_level is not None:
             def on_connect(conn):
                 self.set_isolation_level(conn, self.isolation_level)
+            fns.append(on_connect)
+
+        if self.client_encoding is not None:
+            def on_connect(conn):
+                conn.set_client_encoding(self.client_encoding)
             fns.append(on_connect)
 
         if self.dbapi and self.use_native_uuid:
