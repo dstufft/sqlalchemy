@@ -593,16 +593,31 @@ class PGDialect_psycopg2(PGDialect):
     def _isolation_lookup(self):
         extensions = self._psycopg2_extensions()
         return {
-            'AUTOCOMMIT': extensions.ISOLATION_LEVEL_AUTOCOMMIT,
-            'READ COMMITTED': extensions.ISOLATION_LEVEL_READ_COMMITTED,
-            'READ UNCOMMITTED': extensions.ISOLATION_LEVEL_READ_UNCOMMITTED,
-            'REPEATABLE READ': extensions.ISOLATION_LEVEL_REPEATABLE_READ,
-            'SERIALIZABLE': extensions.ISOLATION_LEVEL_SERIALIZABLE
+            'AUTOCOMMIT': {
+                "isolation_level": extensions.ISOLATION_LEVEL_AUTOCOMMIT,
+            },
+            'READ COMMITTED': {
+                "isolation_level": extensions.ISOLATION_LEVEL_READ_COMMITTED,
+            },
+            'READ UNCOMMITTED': {
+                "isolation_level": extensions.ISOLATION_LEVEL_READ_UNCOMMITTED,
+            },
+            'REPEATABLE READ': {
+                "isolation_level": extensions.ISOLATION_LEVEL_REPEATABLE_READ,
+            },
+            'SERIALIZABLE': {
+                "isolation_level": extensions.ISOLATION_LEVEL_SERIALIZABLE,
+            },
+            'SERIALIZABLE READ ONLY DEFERRABLE': {
+                "isolation_level": extensions.ISOLATION_LEVEL_SERIALIZABLE,
+                "readonly": True,
+                "deferrable": True,
+            },
         }
 
     def set_isolation_level(self, connection, level):
         try:
-            level = self._isolation_lookup[level.replace('_', ' ')]
+            options = self._isolation_lookup[level.replace('_', ' ')]
         except KeyError:
             raise exc.ArgumentError(
                 "Invalid value '%s' for isolation_level. "
@@ -610,7 +625,7 @@ class PGDialect_psycopg2(PGDialect):
                 (level, self.name, ", ".join(self._isolation_lookup))
             )
 
-        connection.set_isolation_level(level)
+        connection.set_session(**options)
 
     def on_connect(self):
         extras = self._psycopg2_extras()
